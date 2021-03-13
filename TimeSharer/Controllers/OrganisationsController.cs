@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace TimeSharer.Controllers
+namespace TimeSharerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

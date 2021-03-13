@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-namespace TimeSharer.Models
+namespace TimeSharerApi.Models
 {
     public class VolunteersResponseModel : BaseResponseModel
     {

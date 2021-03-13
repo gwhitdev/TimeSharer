@@ -1,14 +1,14 @@
 ﻿using System;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization;
-using TimeSharer.Models;
-using TimeSharer.Interfaces;
+using TimeSharerApi.Models;
+using TimeSharerApi.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using static System.Console;
 using MongoDB.Bson;
 
-namespace TimeSharer.Services
+namespace TimeSharerApi.Services
 {
     public class VolunteerService : IVolunteerService
     {

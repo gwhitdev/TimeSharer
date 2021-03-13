@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using TimeSharer.Models;
+using TimeSharerApi.Models;
 
-namespace TimeSharer.Interfaces
+namespace TimeSharerApi.Interfaces
 {
     public interface IVolunteerService
     {

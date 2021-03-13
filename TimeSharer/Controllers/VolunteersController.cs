@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using TimeSharer.Models;
-using TimeSharer.Interfaces;
+using TimeSharerApi.Models;
+using TimeSharerApi.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace TimeSharer.Controllers
+namespace TimeSharerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -1,7 +1,7 @@
 ﻿using System;
-using TimeSharer.Interfaces;
+using TimeSharerApi.Interfaces;
 
-namespace TimeSharer.Models
+namespace TimeSharerApi.Models
 {
     public class DatabaseSettings : IDatabaseSettings
     {

@@ -13,9 +13,9 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
-using TimeSharer.Interfaces;
-using TimeSharer.Services;
-using TimeSharer.Models;
+using TimeSharerApi.Interfaces;
+using TimeSharerApi.Services;
+using TimeSharerApi.Models;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerUI;
 

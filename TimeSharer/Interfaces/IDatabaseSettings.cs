@@ -1,5 +1,5 @@
 ﻿using System;
-namespace TimeSharer.Interfaces
+namespace TimeSharerApi.Interfaces
 {
     public interface IDatabaseSettings
     {

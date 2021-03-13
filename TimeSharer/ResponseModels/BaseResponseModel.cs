@@ -1,5 +1,5 @@
 ﻿using System;
-namespace TimeSharer.Models
+namespace TimeSharerApi.Models
 {
     public class BaseResponseModel
     {

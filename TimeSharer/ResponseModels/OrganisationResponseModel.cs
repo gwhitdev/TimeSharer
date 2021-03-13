@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TimeSharer.Models
+namespace TimeSharerApi.Models
 {
     public class OrganisationResponseModel : BaseResponseModel
     {
