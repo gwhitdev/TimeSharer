@@ -404,5 +404,5 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 
-./TimeSharerApi/appsettings.json
-./TimeSharerApi/appsettings.development.json
+TimeSharerApi/appsettings.json
+TimeSharerApi/appsettings.development.json
