@@ -19,7 +19,7 @@ using TimeSharerApi.Models;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
-namespace TimeSharer
+namespace TimeSharerApi
 {
     public class Startup
     {
