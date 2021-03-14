@@ -18,8 +18,5 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Database\" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Remove="appsettings.json" />
-    <Content Remove="appsettings.json" />
-  </ItemGroup>
+ 
 </Project>

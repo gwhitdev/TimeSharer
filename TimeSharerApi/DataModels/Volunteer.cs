@@ -5,18 +5,12 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TimeSharerApi.Models
 {
-    public class Volunteer
+    public class Volunteer : BaseEntity
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; protected set; }
-        public DateTime UpdatedAt { get; set; }
-        [BsonElement("__v")]
-        public int __v { get; }
-        public Details Details { get; set; }
+        public VolunteerDetails Details { get; set; }
     }
 
-    public class Details
+    public class VolunteerDetails
     {
         public string Name { get; set; }
         public string DateOfBirth { get; set; }

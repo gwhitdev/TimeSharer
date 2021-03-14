@@ -18,6 +18,8 @@ using TimeSharerApi.Services;
 using TimeSharerApi.Models;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
 
 namespace TimeSharerApi
 {
@@ -33,6 +35,8 @@ namespace TimeSharerApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
+
             services.Configure<DatabaseSettings>(
             Configuration.GetSection(nameof(DatabaseSettings)));
 
@@ -57,12 +61,16 @@ namespace TimeSharerApi
             });
 
             services.AddScoped<IVolunteerService, VolunteerService>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            /*app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            */
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

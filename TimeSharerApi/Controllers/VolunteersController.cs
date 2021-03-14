@@ -86,7 +86,7 @@ namespace TimeSharerApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(string id, [FromBody] Details volunteerIn)
+        public IActionResult Update(string id, [FromBody] VolunteerDetails volunteerIn)
         {
             id = id.ToLower();
 

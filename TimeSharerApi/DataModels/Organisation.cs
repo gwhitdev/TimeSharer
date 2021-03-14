@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace TimeSharerApi.Models
+namespace TimeSharerApi.Models 
 {
-    public class Organisation
+    public class Organisation : BaseEntity
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public OrganisationDetails Details { get; set; }
+    }
+
+    public class OrganisationDetails
+    {
         public string Name { get; set; }
         public string Town { get; set; }
         public List<Opportunity> Opportunities { get; set; }
     }
+    
 }

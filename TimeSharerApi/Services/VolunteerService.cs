@@ -1,11 +1,9 @@
 ﻿using System;
 using MongoDB.Driver;
-using MongoDB.Bson.Serialization;
 using TimeSharerApi.Models;
 using TimeSharerApi.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using static System.Console;
 using MongoDB.Bson;
 
 namespace TimeSharerApi.Services
@@ -48,15 +46,17 @@ namespace TimeSharerApi.Services
         {
             if (ObjectId.TryParse(id, out _))
             {
+                Volunteer foundVolunteer = new Volunteer();
                 try
                 {
-                    return _volunteers.Find<Volunteer>(volunteer => volunteer.Id == id).FirstOrDefault();
+                    foundVolunteer = _volunteers.Find<Volunteer>(volunteer => volunteer.Id == id).FirstOrDefault();
                 }
                 catch (MongoException ex)
                 {
                     _logger.LogDebug(ex.Message);
-                    return null;
                 }
+
+                return foundVolunteer;
             }
             else
             {
@@ -67,7 +67,7 @@ namespace TimeSharerApi.Services
             
         }
 
-        public bool Update(string id, Details volunteerIn)
+        public bool Update(string id, VolunteerDetails volunteerIn)
         {
             _logger.LogDebug($"id: {id}");
 
@@ -76,7 +76,6 @@ namespace TimeSharerApi.Services
                 .Set(volunteer => volunteer.Details, volunteerIn)
                 .CurrentDate(s => s.UpdatedAt);
             
-            _logger.LogInformation($"{update}");
             try
             {
                 var v = _volunteers.UpdateOne(filter, update);
