@@ -20,7 +20,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
-
+using Microsoft.AspNetCore.Cors;
 namespace TimeSharerApi
 {
     public class Startup
@@ -42,7 +42,7 @@ namespace TimeSharerApi
 
             services.AddSingleton<IDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
-
+            services.AddCors();
             services.AddControllers();
 
             services.AddSwaggerGen(options =>
@@ -76,6 +76,8 @@ namespace TimeSharerApi
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(
+                options => options.AllowAnyOrigin().AllowAnyMethod());
 
             app.UseHttpsRedirection();
 
