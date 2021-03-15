@@ -38,15 +38,16 @@ namespace TimeSharerApi.Controllers
                 _logger.LogInformation("Trying to get list of volunteers from DB.");
                 var volunteers = _volunteersService.Get().ToList<Volunteer>();
                 _logger.LogDebug($"No. of volunteers found: {volunteers.Count}");
+
+                VolunteerResponse.NumberOfRecordsFound = volunteers.Count;
+                VolunteerResponse.Success = true;
                 if (volunteers.Count == 0)
                 {
-                    VolunteerResponse.Success = true;
                     VolunteerResponse.Message = "Search completed. No volunteer records found.";
                     VolunteerResponse.Data = new List<Volunteer>();
                 }
                 else
                 {
-                    VolunteerResponse.Success = true;
                     VolunteerResponse.Message = "Received volunteer data";
                     VolunteerResponse.Data = volunteers;
                 }
