@@ -103,41 +103,38 @@ namespace TimeSharerApi.Controllers
         public IActionResult Update(string id, [FromBody] OrganisationDetails organisationDetailsIn)
         {
             id = id.ToLower();
+
+            OrganisationResponse.Success = false;
+            OrganisationResponse.NumberOfRecordsFound = 0;
+            OrganisationResponse.Data = new List<Organisation>();
+
             if (organisationDetailsIn == null)
             {
-                OrganisationResponse.Success = false;
-                OrganisationResponse.Message = "Organisation submitted was null.";
-                OrganisationResponse.NumberOfRecordsFound = 0;
-                OrganisationResponse.Data = new List<Organisation>();
+                OrganisationResponse.Message = "Organisation submitted was null.";   
                 return BadRequest(new[] { OrganisationResponse });
             }
 
             if(!ModelState.IsValid)
             {
-                OrganisationResponse.Success = false;
-                OrganisationResponse.NumberOfRecordsFound = 0;
                 OrganisationResponse.Message = $"Not all fields were supplied! {ModelState}";
-                OrganisationResponse.Data = new List<Organisation>();
                 return BadRequest(new[] { OrganisationResponse });
             }
+
             try
             {
                 var existing = _organisationsService.Get(id);
 
                 if (existing == null)
                 {
-                    OrganisationResponse.Success = false;
-                    OrganisationResponse.NumberOfRecordsFound = 0;
                     OrganisationResponse.Message = "Organisation record not found";
-                    OrganisationResponse.Data = new List<Organisation>();
                     return NotFound(new[] { OrganisationResponse });
                 }
 
                 var updated = _organisationsService.Update(id, organisationDetailsIn);
                 var organisationFound = new List<Organisation>() { _organisationsService.Get(id) };
+
                 if (!updated)
                 {
-                    OrganisationResponse.Success = false;
                     OrganisationResponse.NumberOfRecordsFound = organisationFound.Count;
                     OrganisationResponse.Message = "Update didn't work!";
                     OrganisationResponse.Data = organisationFound;
@@ -168,25 +165,26 @@ namespace TimeSharerApi.Controllers
             try
             {
                 var exists = _organisationsService.Get(id);
+                
+                OrganisationResponse.Success = false;
+                OrganisationResponse.Data = new List<Organisation>();
+
                 if (exists == null)
-                {
-                    OrganisationResponse.Success = false;
-                    OrganisationResponse.Message = "Volunteer record not found. Cannot delete.";
-                    OrganisationResponse.Data = new List<Organisation>();
+                {   
+                    OrganisationResponse.Message = "Volunteer record not found. Cannot delete.";   
                     return NotFound(new[] { OrganisationResponse });
                 }
 
                 bool volunteerRemoved = _organisationsService.Delete(id);
+
                 if (!volunteerRemoved)
                 {
-                    OrganisationResponse.Success = false;
                     OrganisationResponse.Message = "Volunteer record not deleted";
-                    OrganisationResponse.Data = new List<Organisation>();
                     return BadRequest(new[] { OrganisationResponse });
                 }
+
                 OrganisationResponse.Success = true;
                 OrganisationResponse.Message = $"Volunteer record with id {id} deleted.";
-                OrganisationResponse.Data = null;
                 return Ok(new[] { OrganisationResponse });
             }
             catch (MongoException ex)
