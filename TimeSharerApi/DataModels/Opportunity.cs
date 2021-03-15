@@ -4,11 +4,8 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TimeSharerApi.Models
 {
-    public class Opportunity
+    public class Opportunity : BaseEntity
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
         public string Title { get; set; }
         public bool Live { get; set; }
         public string Town { get; set; }

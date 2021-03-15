@@ -10,6 +10,6 @@ namespace TimeSharerApi.Models
         public string Id { get; set; }
         public DateTime UpdatedAt { get; set; }
         [BsonElement("__v")]
-        protected int _v { get; }
+        protected int V { get; }
     }
 }

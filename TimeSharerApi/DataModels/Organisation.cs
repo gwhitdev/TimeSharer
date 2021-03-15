@@ -14,7 +14,8 @@ namespace TimeSharerApi.Models
     {
         public string Name { get; set; }
         public string Town { get; set; }
-        public List<Opportunity> Opportunities { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string> OpportunityIds { get; set; }
     }
     
 }

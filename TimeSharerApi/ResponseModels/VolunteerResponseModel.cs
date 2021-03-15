@@ -4,6 +4,6 @@ namespace TimeSharerApi.Models
 {
     public class VolunteersResponseModel : BaseResponseModel
     {
-        public List<Volunteer> Data {get; set;}
+        public List<Volunteer> Data { get; set; } = new List<Volunteer>();
     }
 }

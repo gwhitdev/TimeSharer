@@ -4,6 +4,8 @@ namespace TimeSharerApi.Models
 {
     public class OrganisationResponseModel : BaseResponseModel
     {
-        public Organisation[] Data { get; set; }
+        public List<Organisation> Data { get; set; }
+
+
     }
 }

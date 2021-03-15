@@ -47,7 +47,7 @@ namespace TimeSharerApi.Services
                 return result;
             }
 
-            return null;
+            return new List<Organisation>();
         }
 
         public Organisation Get(string id)

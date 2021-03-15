@@ -16,9 +16,9 @@ namespace TimeSharerApi.Models
         public string DateOfBirth { get; set; }
         public string Town { get; set; }
         public List<string> ListOfSkills { get; set; } = new List<string>() { };
-        //[BsonElement("AssignedOpportunities")]
-        //[BsonRepresentation(BsonType.ObjectId)]
-        //public List<string> AssignedOpportunities { get; set; } = new List<string> { };
+        [BsonElement("AssignedOpportunities")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string> AssignedOpportunities { get; set; } = new List<string> { };
         public bool StopProccessingData { get; set; } = false;
         public bool ConfirmDataSharing { get; set; } = false;
     }

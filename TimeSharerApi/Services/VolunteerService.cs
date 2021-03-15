@@ -32,7 +32,7 @@ namespace TimeSharerApi.Services
                 return result;
             }
 
-            return null;
+            return new List<Volunteer>();
         }
 
         public Volunteer Create(Volunteer volunteer)
@@ -61,7 +61,7 @@ namespace TimeSharerApi.Services
             else
             {
                 _logger.LogDebug("Id could not be parsed");
-                return null;
+                return new Volunteer();
             }
             
             
@@ -84,10 +84,9 @@ namespace TimeSharerApi.Services
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex.Message);
-                return false;
-                
+                _logger.LogDebug(ex.Message); 
             }
+            return false;
         }
 
         public bool Delete(Volunteer volunteerIn)
