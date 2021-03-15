@@ -35,66 +35,48 @@ namespace TimeSharerApi.Controllers
             {
                 _logger.LogInformation("Trying to get list of organisations");
                 var organisations = _organisationsService.Get().ToList();
-                if(organisations.Count == 0)
-                {
-                    _logger.LogInformation($"Search completed. Found {organisations.Count} organisations.");
-                    OrganisationResponse.Success = true;
-                    OrganisationResponse.NumberOfRecordsFound = organisations.Count;
-                    OrganisationResponse.Message = $"Search completed. Found {organisations.Count} organisations.";
-                    OrganisationResponse.Data = new List<Organisation>();
-                }
-                else
-                {
-                    _logger.LogInformation($"Number of organisations found: {organisations.Count}");
-                    OrganisationResponse.Success = true;
-                    OrganisationResponse.NumberOfRecordsFound = organisations.Count;
-                    OrganisationResponse.Message = $"Search completed.";
-                    OrganisationResponse.Data = organisations;
-                }
+                _logger.LogInformation($"Search completed. Found {organisations.Count} organisations.");
+                OrganisationResponse.Success = true;
+                OrganisationResponse.NumberOfRecordsFound = organisations.Count;
+                OrganisationResponse.Message = $"Search completed. Found {organisations.Count} organisations.";
+                if (organisations.Count == 0) OrganisationResponse.Data = new List<Organisation>();
+                OrganisationResponse.Data = organisations;
                 return Ok(new[] { OrganisationResponse });
-            }
-            catch (MongoException ex)
-            {
-                _logger.LogInformation($"Error getting organisations from DB: {ex.Message}");
             }
             catch(Exception ex)
             {
                 _logger.LogInformation($"Error: {ex.Message}");
             }
-
-            return NotFound();
+            _logger.LogError("Bad request");
+            return BadRequest();
         }
         
-        [HttpGet("{id}", Name = nameof(GetById))]
-        [ProducesResponseType(200, Type = typeof(OrganisationResponseModel))]
+        [HttpGet("{id}", Name = "GetOrganisationById")]
+        [ProducesResponseType(200, Type = typeof(Organisation))]
         [ProducesResponseType(404)]
         public IActionResult GetById(string id)
         {
             try
             {
                 var result = _organisationsService.Get(id);
-                List<Organisation> organisation = new List<Organisation>() { result };
-
+                List<Organisation> organisation = new() { result };
+                OrganisationResponse.NumberOfRecordsFound = organisation.Count;
                 if (result == null)
                 {
                     OrganisationResponse.Success = false;
-                    OrganisationResponse.NumberOfRecordsFound = organisation.Count;
                     OrganisationResponse.Message = $"Error: organisation with id {id} cannot be found. ";
-                    OrganisationResponse.Data = null;
+                    OrganisationResponse.Data = new List<Organisation>();
                     _logger.LogInformation($"Not found: cannot find organisation record with id {id}.");
                     return NotFound(new[] { OrganisationResponse });
                 }
-
                 OrganisationResponse.Success = true;
-                OrganisationResponse.NumberOfRecordsFound = organisation.Count;
-                OrganisationResponse.Message = $"Found ingredient by ID: {id}.";
+                OrganisationResponse.Message = $"Found organisation: {id}.";
                 OrganisationResponse.Data = organisation;
-
                 return Ok(new[] { OrganisationResponse });
             }
             catch (MongoException ex)
             {
-                _logger.LogDebug($"Error updating organisation record in the DB: {ex.Message}");
+                _logger.LogDebug($"Error getting organisation record in the DB: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -111,7 +93,7 @@ namespace TimeSharerApi.Controllers
             Organisation organisationToCreate = new Organisation();
             organisationToCreate = _organisationsService.Create(organisationIn);
             return CreatedAtRoute(
-                routeName: nameof(GetById),
+                routeName: "GetOrganisationById",
                 routeValues: new { id = organisationToCreate.Id.ToString() },
                 value: organisationToCreate);
         }

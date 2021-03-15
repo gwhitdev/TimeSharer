@@ -59,28 +59,38 @@ namespace TimeSharerApi.Controllers
             return NotFound();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetById")]
         [ProducesResponseType(200, Type = typeof(Volunteer))]
         [ProducesResponseType(400)]
         public IActionResult GetById(string id)
         {
-            var result = _volunteersService.Read(id);
-            List<Volunteer> volunteer = new List<Volunteer>() { result };
-
-            if (result == null)
+            try
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Bad Request.";
-                VolunteerResponse.Data = null;
-
-                return BadRequest(new[] { VolunteerResponse });
+                var result = _volunteersService.Read(id);
+                List<Volunteer> volunteer = new() { result };
+                VolunteerResponse.NumberOfRecordsFound = volunteer.Count;
+                if (result == null)
+                {
+                    VolunteerResponse.Success = false;
+                    VolunteerResponse.Message = $"Error: volunteer {id} cannot be found. ";
+                    VolunteerResponse.Data = new List<Volunteer>();
+                    _logger.LogInformation($"Not found: cannot find organisation record with id {id}.");
+                    return NotFound(new[] { VolunteerResponse });
+                }
+                VolunteerResponse.Success = true;
+                VolunteerResponse.Message = $"Found volunteer: {id}.";
+                VolunteerResponse.Data = volunteer;
+                return Ok(new[] { VolunteerResponse });
             }
-
-            VolunteerResponse.Success = true;
-            VolunteerResponse.Message = $"Found ingredient by ID: {id}.";
-            VolunteerResponse.Data = volunteer;
-
-            return Ok(new[] { VolunteerResponse });
+            catch (MongoException ex)
+            {
+                _logger.LogDebug($"Error getting volunteer record in the DB: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Error: {ex.Message}");
+            }
+            return BadRequest();
         }
 
 
@@ -93,7 +103,7 @@ namespace TimeSharerApi.Controllers
             volunteerToCreate = _volunteersService.Create(volunteer);
 
             return CreatedAtRoute(
-                routeName: nameof(GetById),
+                routeName: "GetById",
                 routeValues: new { id = volunteerToCreate.Id.ToString() },
                 value: volunteerToCreate);
 

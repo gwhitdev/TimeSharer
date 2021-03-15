@@ -28,13 +28,18 @@ namespace TimeSharerApi.Services
         {
             try
             {
-                _organisations.InsertOneAsync(organisation);
+                _organisations.InsertOne(organisation);
+                return organisation;
             }
             catch(MongoException ex)
             {
                 _logger.LogError($"Mongo error, record was not inserted. {ex.Message}");
             }
-            return organisation;
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+            }
+            return new Organisation();
         }
 
 
@@ -54,10 +59,10 @@ namespace TimeSharerApi.Services
         {
             if(ObjectId.TryParse(id, out _))
             {
-                Organisation foundOrganisation = new Organisation();
+                Organisation foundOrganisation = new();
                 try
                 {
-                     foundOrganisation = _organisations.Find<Organisation>(organisation => organisation.Id == id).FirstOrDefault();
+                     foundOrganisation = _organisations.Find(organisation => organisation.Id == id).FirstOrDefault();
                 }
                 catch(MongoException ex)
                 {
@@ -69,7 +74,7 @@ namespace TimeSharerApi.Services
             else
             {
                 _logger.LogError("ID could not be parsed");
-                return null;
+                return new Organisation();
             }
 
         }
@@ -80,21 +85,24 @@ namespace TimeSharerApi.Services
             var update = Builders<Organisation>.Update
                 .Set(organisaion => organisaion.Details, organisationIn)
                 .CurrentDate(o => o.UpdatedAt);
-            
             try
             {
                 _logger.LogInformation($"Trying to update organisation with id {id}");
                 var o = _organisations.UpdateOne(filter, update);
                 var organisationUpdatedId = o.UpsertedId;
                 var parsed = ObjectId.TryParse(id, out _);
-                if (organisationUpdatedId == parsed) return true;
-                return false;
+                return organisationUpdatedId == parsed;
             }
             catch (MongoException ex)
             {
                 _logger.LogError($"Error trying to update the record with id {id}: {ex.Message}");
-                return false;
             }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+            }
+            _logger.LogInformation($"Did not update record {id}");
+            return false;
         }
         public bool Delete(Organisation organisationIn)
         {
