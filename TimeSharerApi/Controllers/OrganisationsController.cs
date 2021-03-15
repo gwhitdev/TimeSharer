@@ -133,17 +133,18 @@ namespace TimeSharerApi.Controllers
                 var updated = _organisationsService.Update(id, organisationDetailsIn);
                 var organisationFound = new List<Organisation>() { _organisationsService.Get(id) };
 
+                OrganisationResponse.Data = organisationFound;
+
                 if (!updated)
                 {
                     OrganisationResponse.NumberOfRecordsFound = organisationFound.Count;
                     OrganisationResponse.Message = "Update didn't work!";
-                    OrganisationResponse.Data = organisationFound;
                     return BadRequest(new[] { OrganisationResponse });
                 }
+
                 OrganisationResponse.Success = true;
                 OrganisationResponse.NumberOfRecordsFound = organisationFound.Count;
                 OrganisationResponse.Message = "Organisation record updated";
-                OrganisationResponse.Data = new List<Organisation>() { _organisationsService.Get(id) };
                 return Ok(new[] { OrganisationResponse });
             }
             catch(MongoException ex)
