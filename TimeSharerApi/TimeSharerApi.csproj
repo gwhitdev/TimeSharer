@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ResponseModels\" />
+    <Folder Include="Responses\" />
     <Folder Include="DataModels\" />
     <Folder Include="Services\" />
     <Folder Include="Interfaces\" />

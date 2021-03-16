@@ -17,30 +17,31 @@ namespace TimeSharerApi.Controllers
     {
         private readonly ILogger _logger;
         private readonly IOrganisationService _organisationsService;
-        public OrganisationResponseModel OrganisationResponse { get; set; }
+        public Response<List<Organisation>> OrganisationResponse { get; set; }
 
         public OrganisationsController(ILoggerFactory loggerFactory, IOrganisationService organisationsService)
         {
-            _logger = loggerFactory.CreateLogger<VolunteersController>();
+            _logger = loggerFactory.CreateLogger<OrganisationsController>();
             _organisationsService = organisationsService;
-            OrganisationResponse = new OrganisationResponseModel();
+            OrganisationResponse = new();
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(OrganisationResponseModel))]
+        [ProducesResponseType(200, Type = typeof(Response<List<Organisation>>))]
         [ProducesResponseType(404)]
         public IActionResult Get()
         {
+            _logger.LogInformation($"success 1?: {OrganisationResponse.Success}");
             try
             {
                 _logger.LogInformation("Trying to get list of organisations");
                 var organisations = _organisationsService.Get().ToList();
                 _logger.LogInformation($"Search completed. Found {organisations.Count} organisations.");
-                OrganisationResponse.Success = true;
+                _logger.LogInformation($"{OrganisationResponse.Success}");
+                //OrganisationResponse.Success = true;
                 OrganisationResponse.NumberOfRecordsFound = organisations.Count;
-                OrganisationResponse.Message = $"Search completed. Found {organisations.Count} organisations.";
-                if (organisations.Count == 0) OrganisationResponse.Data = new List<Organisation>();
                 OrganisationResponse.Data = organisations;
+                OrganisationResponse.Message = "Search completed.";
                 return Ok(new[] { OrganisationResponse });
             }
             catch(Exception ex)
@@ -59,19 +60,20 @@ namespace TimeSharerApi.Controllers
             try
             {
                 var result = _organisationsService.Get(id);
-                List<Organisation> organisation = new() { result };
-                OrganisationResponse.NumberOfRecordsFound = organisation.Count;
-                if (result == null)
+                List<Organisation> organisations = new() { result };
+                
+                if (organisations.FirstOrDefault() == null)
                 {
+                    OrganisationResponse.NumberOfRecordsFound = 0;
                     OrganisationResponse.Success = false;
+                    OrganisationResponse.Data = new();
                     OrganisationResponse.Message = $"Error: organisation with id {id} cannot be found. ";
-                    OrganisationResponse.Data = new List<Organisation>();
                     _logger.LogInformation($"Not found: cannot find organisation record with id {id}.");
                     return NotFound(new[] { OrganisationResponse });
                 }
-                OrganisationResponse.Success = true;
+                OrganisationResponse.Data = organisations;
+                OrganisationResponse.NumberOfRecordsFound = organisations.Count;
                 OrganisationResponse.Message = $"Found organisation: {id}.";
-                OrganisationResponse.Data = organisation;
                 return Ok(new[] { OrganisationResponse });
             }
             catch (MongoException ex)
@@ -90,8 +92,7 @@ namespace TimeSharerApi.Controllers
         [ProducesResponseType(401)]
         public IActionResult Create([FromBody] Organisation organisationIn)
         {
-            Organisation organisationToCreate = new Organisation();
-            organisationToCreate = _organisationsService.Create(organisationIn);
+            Organisation organisationToCreate = _organisationsService.Create(organisationIn);
             return CreatedAtRoute(
                 routeName: "GetOrganisationById",
                 routeValues: new { id = organisationToCreate.Id.ToString() },
@@ -105,8 +106,6 @@ namespace TimeSharerApi.Controllers
             id = id.ToLower();
 
             OrganisationResponse.Success = false;
-            OrganisationResponse.NumberOfRecordsFound = 0;
-            OrganisationResponse.Data = new List<Organisation>();
 
             if (organisationDetailsIn == null)
             {
@@ -134,14 +133,12 @@ namespace TimeSharerApi.Controllers
                 var organisationFound = new List<Organisation>() { _organisationsService.Get(id) };
 
                 OrganisationResponse.Data = organisationFound;
-
                 if (!updated)
                 {
                     OrganisationResponse.NumberOfRecordsFound = organisationFound.Count;
                     OrganisationResponse.Message = "Update didn't work!";
                     return BadRequest(new[] { OrganisationResponse });
                 }
-
                 OrganisationResponse.Success = true;
                 OrganisationResponse.NumberOfRecordsFound = organisationFound.Count;
                 OrganisationResponse.Message = "Organisation record updated";

@@ -39,20 +39,34 @@ namespace TimeSharerApi.Services
             {
                 _logger.LogError($"Error: {ex.Message}");
             }
-            return new Organisation();
+            throw new Exception("Could not create organisation in the DB.");
         }
 
 
 
         public List<Organisation> Get()
         {
-            var result = _organisations.Find(organisation => true).ToList();
-            if (result.Count > 0)
+            try
             {
-                return result;
+                _logger.LogInformation("Trying to get organisations from DB...");
+                var result = _organisations.Find(organisation => true).ToList();
+                if (result.Count > 0)
+                {
+                    return result;
+                }
+
+                throw new Exception("No results returned");
+            }
+            catch (MongoException ex)
+            {
+                _logger.LogError($"Error searching DB! {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
             }
 
-            return new List<Organisation>();
+            throw new Exception("Could not get list of organisations from DB");
         }
 
         public Organisation Get(string id)
@@ -68,13 +82,16 @@ namespace TimeSharerApi.Services
                 {
                     _logger.LogError(ex.Message);
                 }
-
-                return foundOrganisation;
+                
+                if (foundOrganisation.Id.Equals(id)) return foundOrganisation;
+                _logger.LogInformation("Error: Sent and returned IDs do not match.");
+                throw new Exception("Error: sent and returned IDs do not match");
+                
             }
             else
             {
                 _logger.LogError("ID could not be parsed");
-                return new Organisation();
+                throw new Exception("Error: ID could not be parsed");
             }
 
         }
@@ -90,8 +107,12 @@ namespace TimeSharerApi.Services
                 _logger.LogInformation($"Trying to update organisation with id {id}");
                 var o = _organisations.UpdateOne(filter, update);
                 var organisationUpdatedId = o.UpsertedId;
-                var parsed = ObjectId.TryParse(id, out _);
-                return organisationUpdatedId == parsed;
+                if (o.ModifiedCount == 1)
+                {
+                    _logger.LogInformation($"Updated successfully");
+                    return true;
+                }
+                throw new Exception("Update request completed but modified count does not equal 1.");
             }
             catch (MongoException ex)
             {
@@ -102,7 +123,7 @@ namespace TimeSharerApi.Services
                 _logger.LogError($"Error: {ex.Message}");
             }
             _logger.LogInformation($"Did not update record {id}");
-            return false;
+            throw new Exception("Error. Something went wrong and record was not updated.");
         }
         public bool Delete(Organisation organisationIn)
         {
@@ -114,10 +135,25 @@ namespace TimeSharerApi.Services
 
         public bool Delete(string id)
         {
-            _logger.LogInformation($"Trying to delete organisation record with ID {id}");
-            DeleteResult removed = _organisations.DeleteOne(organisation => organisation.Id == id);
-            _logger.LogDebug($"DelectedCount: {removed.DeletedCount}");
-            return removed.DeletedCount == 1;
+            try
+            {
+                _logger.LogInformation($"Trying to delete organisation record with ID {id}");
+                DeleteResult removed = _organisations.DeleteOne(organisation => organisation.Id == id);
+                if(removed.DeletedCount == 1)
+                {
+                    _logger.LogDebug($"Record deleted successfully.");
+                    return true;
+                }
+            }
+            catch (MongoException ex)
+            {
+                _logger.LogError($"Error deleting record: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+            }
+            throw new Exception("Could not delete record");            
         }
     }
 }
