@@ -63,6 +63,7 @@ namespace TimeSharerApi
             services.AddScoped<IVolunteerService, VolunteerService>();
             services.AddScoped<IOrganisationService, OrganisationService>();
             services.AddScoped<IOpportunityService, OpportunityService>();
+            services.AddScoped<IUsersService, UsersService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TimeSharerApi.Models;
 
 namespace TimeSharerApi.Interfaces
@@ -8,7 +7,7 @@ namespace TimeSharerApi.Interfaces
     {
         public List<Volunteer> Get();
         public Volunteer Create(Volunteer volunteer);
-        public Volunteer Read(string id);
+        public Volunteer Get(string id);
         public bool Update(string id, VolunteerDetails volunteerIn);
         public bool Delete(string id);
     }

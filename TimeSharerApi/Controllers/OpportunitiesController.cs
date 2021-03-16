@@ -26,7 +26,7 @@ namespace TimeSharerApi.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(OpportunityResponseModel))]
+        [ProducesResponseType(200, Type = typeof(Response<List<Opportunity>>))]
         [ProducesResponseType(404)]
         public IActionResult Get()
         {

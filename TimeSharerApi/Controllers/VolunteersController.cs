@@ -4,12 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
-using MongoDB.Bson;
-using Newtonsoft.Json;
 using TimeSharerApi.Models;
 using TimeSharerApi.Interfaces;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 
 namespace TimeSharerApi.Controllers
 {
@@ -19,69 +17,61 @@ namespace TimeSharerApi.Controllers
     {
         private readonly ILogger _logger;
         private readonly IVolunteerService _volunteersService;
-        public VolunteersResponseModel VolunteerResponse { get; set; }
+        public Response<List<Volunteer>> VolunteersResponse { get; set; }
 
-        public VolunteersController(ILoggerFactory loggerFactory, IVolunteerService volunteerService)
+        public VolunteersController(ILoggerFactory loggerFactory, IVolunteerService volunteersService)
         {
             _logger = loggerFactory.CreateLogger<VolunteersController>();
-            _volunteersService = volunteerService;
-            VolunteerResponse = new VolunteersResponseModel();
+            _volunteersService = volunteersService;
+            VolunteersResponse = new();
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(VolunteersResponseModel))]
+        [ProducesResponseType(200, Type = typeof(Response<List<Volunteer>>))]
         [ProducesResponseType(404)]
         public IActionResult Get()
         {
             try
             {
-                _logger.LogInformation("Trying to get list of volunteers from DB.");
-                var volunteers = _volunteersService.Get().ToList<Volunteer>();
-                _logger.LogDebug($"No. of volunteers found: {volunteers.Count}");
-
-                VolunteerResponse.NumberOfRecordsFound = volunteers.Count;
-                VolunteerResponse.Success = true;
-                if (volunteers.Count == 0)
-                {
-                    VolunteerResponse.Message = "Search completed. No volunteer records found.";
-                    VolunteerResponse.Data = new List<Volunteer>();
-                }
-                else
-                {
-                    VolunteerResponse.Message = "Received volunteer data";
-                    VolunteerResponse.Data = volunteers;
-                }
-                return Ok(new[] { VolunteerResponse });
+                _logger.LogInformation("Trying to get list of volunteers");
+                var volunteers = _volunteersService.Get().ToList();
+                _logger.LogInformation($"Search completed. Found {volunteers.Count} volunteers.");
+                VolunteersResponse.NumberOfRecordsFound = volunteers.Count;
+                VolunteersResponse.Data = volunteers;
+                VolunteersResponse.Message = "Search completed.";
+                return Ok(new[] { VolunteersResponse });
             }
-            catch (MongoException ex)
+            catch (Exception ex)
             {
-                _logger.LogDebug($"Error searching DB for volunteer records: {ex.Message}");
+                _logger.LogInformation($"Error: {ex.Message}");
             }
-            return NotFound();
+            _logger.LogError("Bad request");
+            return BadRequest();
         }
 
-        [HttpGet("{id}", Name = "GetById")]
+        [HttpGet("{id}", Name = "GetvolunteerById")]
         [ProducesResponseType(200, Type = typeof(Volunteer))]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public IActionResult GetById(string id)
         {
             try
             {
-                var result = _volunteersService.Read(id);
-                List<Volunteer> volunteer = new() { result };
-                VolunteerResponse.NumberOfRecordsFound = volunteer.Count;
-                if (result == null)
+                var result = _volunteersService.Get(id);
+                List<Volunteer> volunteers = new() { result };
+
+                if (volunteers.FirstOrDefault() == null)
                 {
-                    VolunteerResponse.Success = false;
-                    VolunteerResponse.Message = $"Error: volunteer {id} cannot be found. ";
-                    VolunteerResponse.Data = new List<Volunteer>();
-                    _logger.LogInformation($"Not found: cannot find organisation record with id {id}.");
-                    return NotFound(new[] { VolunteerResponse });
+                    VolunteersResponse.NumberOfRecordsFound = 0;
+                    VolunteersResponse.Success = false;
+                    VolunteersResponse.Data = new();
+                    VolunteersResponse.Message = $"Error: volunteer with id {id} cannot be found. ";
+                    _logger.LogInformation($"Not found: cannot find volunteer record with id {id}.");
+                    return NotFound(new[] { VolunteersResponse });
                 }
-                VolunteerResponse.Success = true;
-                VolunteerResponse.Message = $"Found volunteer: {id}.";
-                VolunteerResponse.Data = volunteer;
-                return Ok(new[] { VolunteerResponse });
+                VolunteersResponse.Data = volunteers;
+                VolunteersResponse.NumberOfRecordsFound = volunteers.Count;
+                VolunteersResponse.Message = $"Found volunteer: {id}.";
+                return Ok(new[] { VolunteersResponse });
             }
             catch (MongoException ex)
             {
@@ -94,96 +84,114 @@ namespace TimeSharerApi.Controllers
             return BadRequest();
         }
 
-
         [HttpPost]
-        [ProducesResponseType(201, Type = typeof(VolunteersResponseModel))]
+        [ProducesResponseType(201, Type = typeof(Volunteer))]
         [ProducesResponseType(401)]
-        public IActionResult Create([FromBody] Volunteer volunteer)
+        public IActionResult Create([FromBody] Volunteer volunteerIn)
         {
-            Volunteer volunteerToCreate = new Volunteer();
-            volunteerToCreate = _volunteersService.Create(volunteer);
-
+            Volunteer volunteerToCreate = _volunteersService.Create(volunteerIn);
             return CreatedAtRoute(
-                routeName: "GetById",
+                routeName: "GetvolunteerById",
                 routeValues: new { id = volunteerToCreate.Id.ToString() },
                 value: volunteerToCreate);
-
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(string id, [FromBody] VolunteerDetails volunteerIn)
+        [ProducesResponseType(200, Type = typeof(VolunteerDetails))]
+        public IActionResult Update(string id, [FromBody] VolunteerDetails volunteerDetailsIn)
         {
             id = id.ToLower();
 
-            if (volunteerIn == null)
+            VolunteersResponse.Success = false;
+
+            if (volunteerDetailsIn == null)
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Volunteer submitted was null";
-                VolunteerResponse.Data = null;
-                return BadRequest(new[] { VolunteerResponse });
+                VolunteersResponse.Message = "volunteer submitted was null.";
+                return BadRequest(new[] { VolunteersResponse });
             }
 
             if (!ModelState.IsValid)
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Not all fields were supplied! {ModelState}";
-                VolunteerResponse.Data = null;
-                return BadRequest(new[] { VolunteerResponse });
+                VolunteersResponse.Message = $"Not all fields were supplied! {ModelState}";
+                return BadRequest(new[] { VolunteersResponse });
             }
 
-            var existing = _volunteersService.Read(id);
-
-            if (existing == null)
+            try
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Volunteer record not found";
-                VolunteerResponse.Data = null;
-                return NotFound(new[] { VolunteerResponse });
-            }
+                var existing = _volunteersService.Get(id);
 
-            var updated = _volunteersService.Update(id, volunteerIn);
-           
-            if(!updated)
+                if (existing == null)
+                {
+                    VolunteersResponse.Message = "volunteer record not found";
+                    return NotFound(new[] { VolunteersResponse });
+                }
+
+                var updated = _volunteersService.Update(id, volunteerDetailsIn);
+                var volunteerFound = new List<Volunteer>() { _volunteersService.Get(id) };
+
+                VolunteersResponse.Data = volunteerFound;
+                if (!updated)
+                {
+                    VolunteersResponse.NumberOfRecordsFound = volunteerFound.Count;
+                    VolunteersResponse.Message = "Update didn't work!";
+                    return BadRequest(new[] { VolunteersResponse });
+                }
+                VolunteersResponse.Success = true;
+                VolunteersResponse.NumberOfRecordsFound = volunteerFound.Count;
+                VolunteersResponse.Message = "volunteer record updated";
+                return Ok(new[] { VolunteersResponse });
+            }
+            catch (MongoException ex)
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Update didn't work";
-                VolunteerResponse.Data = new List<Volunteer>() { _volunteersService.Read(id) };
-                return BadRequest(new[] { VolunteerResponse });
+                _logger.LogDebug($"Error updating volunteer record in the DB: {ex.Message}");
             }
-
-            VolunteerResponse.Success = true;
-            VolunteerResponse.Message = "Volunteer record updated";
-            VolunteerResponse.Data = new List<Volunteer>() { _volunteersService.Read(id) };
-
-            return Ok(new[] { VolunteerResponse });
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Error: {ex.Message}");
+            }
+            _logger.LogInformation("Error: update request cannot be handled, bad request.");
+            return BadRequest();
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            var exists = _volunteersService.Read(id);
-            if(exists == null)
+            _logger.LogInformation($"Trying to delete volunteer record {id}");
+            try
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Volunteer record not found. Cannot delete.";
-                VolunteerResponse.Data = null;
-                return NotFound(new[] { VolunteerResponse });
-            }
+                var exists = _volunteersService.Get(id);
 
-            bool volunteerRemoved = _volunteersService.Delete(id);
-            if (!volunteerRemoved)
+                VolunteersResponse.Success = false;
+                VolunteersResponse.Data = new List<Volunteer>();
+
+                if (exists == null)
+                {
+                    VolunteersResponse.Message = "Volunteer record not found. Cannot delete.";
+                    return NotFound(new[] { VolunteersResponse });
+                }
+
+                bool volunteerRemoved = _volunteersService.Delete(id);
+
+                if (!volunteerRemoved)
+                {
+                    VolunteersResponse.Message = "Volunteer record not deleted";
+                    return BadRequest(new[] { VolunteersResponse });
+                }
+
+                VolunteersResponse.Success = true;
+                VolunteersResponse.Message = $"Volunteer record with id {id} deleted.";
+                return Ok(new[] { VolunteersResponse });
+            }
+            catch (MongoException ex)
             {
-                VolunteerResponse.Success = false;
-                VolunteerResponse.Message = "Volunteer record not deleted";
-                VolunteerResponse.Data = null;
-                return BadRequest(new[] { VolunteerResponse });
+                _logger.LogDebug($"Error removing from DB: {ex.Message}");
             }
-
-            VolunteerResponse.Success = true;
-            VolunteerResponse.Message = "Volunteer record removed";
-            VolunteerResponse.Data = null;
-            return Ok(new[] { VolunteerResponse });
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Error: {ex.Message}");
+            }
+            _logger.LogInformation("Error: delete request cannot be handled, bad request.");
+            return BadRequest();
         }
-
     }
 }

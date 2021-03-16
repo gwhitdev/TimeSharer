@@ -7,51 +7,51 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 namespace TimeSharerApi.Services
 {
-    public class OpportunityService : IOpportunityService
+    public class UsersService : IUsersService
     {
         private readonly ILogger _logger;
-        private readonly IMongoCollection<Opportunity> _opportunities;
+        private readonly IMongoCollection<User> _users;
+        //private readonly IMongoCollection<Volunteer> _volunteers;
 
-        public OpportunityService(IDatabaseSettings settings, ILoggerFactory loggerFactory)
+        public UsersService(IDatabaseSettings settings, ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<OpportunityService>();
+            _logger = loggerFactory.CreateLogger<UsersService>();
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
-            _opportunities = database.GetCollection<Opportunity>(settings.OpportunitiesCollectionName);
+            _users = database.GetCollection<User>(settings.UsersCollectionName);
         }
-
-        public Opportunity Create(Opportunity opportunity)
+        public User Create(User userIn)
         {
             try
             {
-                _opportunities.InsertOne(opportunity);
-                return opportunity;
+                _users.InsertOne(userIn);
+                return userIn;
             }
-            catch( MongoException ex)
+            catch (MongoException ex)
             {
-                _logger.LogError($"Error creating opportunity: {ex.Message}");
+                _logger.LogError($"Mongo error, record was not inserted. {ex.Message}");
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}");
             }
-            return new Opportunity();
+            throw new Exception("Could not create user in the DB.");
         }
 
         public bool Delete(string id)
         {
-            _logger.LogInformation($"Trying to delete opportunity with id {id}");
+            _logger.LogInformation($"Trying to delete user with id {id}");
             try
             {
-                DeleteResult removed = _opportunities.DeleteOne(opportuntity => opportuntity.Id == id);
+                DeleteResult removed = _users.DeleteOne(user => user.Id == id);
                 _logger.LogInformation($"Number of records deleted: {removed.DeletedCount}");
                 return removed.DeletedCount == 1;
             }
-            catch(MongoException ex)
+            catch (MongoException ex)
             {
                 _logger.LogError($"Error deleting record from DB: {ex.Message}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}");
             }
@@ -59,21 +59,21 @@ namespace TimeSharerApi.Services
             return false;
         }
 
-        public List<Opportunity> Get()
+        public List<User> Get()
         {
-            _logger.LogInformation("Trying to get list of opportunities...");
-            List<Opportunity> result = new();
+            _logger.LogInformation("Trying to get list of users...");
+            List<User> result = new();
             try
             {
-                result = _opportunities.Find(opportunity => true).ToList();
+                result = _users.Find(user => true).ToList();
                 _logger.LogInformation($"Number of records found: {result.Count}");
 
             }
-            catch(MongoException ex)
+            catch (MongoException ex)
             {
                 _logger.LogError($"Could not find list of records: {ex.Message}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"Error: {ex.Message}");
             }
@@ -84,24 +84,23 @@ namespace TimeSharerApi.Services
                 return result;
             }
             _logger.LogInformation("Search completed but did not find any records.");
-            return new List<Opportunity>();
-
+            return new List<User>();
         }
 
-        public Opportunity Get(string id)
+        public User Get(string id)
         {
-            if(ObjectId.TryParse(id, out _))
+            if (ObjectId.TryParse(id, out _))
             {
-                Opportunity foundOpportunity = new();
+                User foundOpportunity = new();
                 try
                 {
-                    foundOpportunity = _opportunities.Find(opportunity => opportunity.Id == id).FirstOrDefault();
+                    foundOpportunity = _users.Find(user => user.Id == id).FirstOrDefault();
                 }
-                catch(MongoException ex)
+                catch (MongoException ex)
                 {
                     _logger.LogError($"Error trying to get opportunity record {id}: {ex.Message}");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError($"Error: {ex.Message}");
                 }
@@ -110,22 +109,22 @@ namespace TimeSharerApi.Services
             else
             {
                 _logger.LogError("ID could not be parsed");
-                return new Opportunity();
+                throw new Exception("User ID could not be parsed");
             }
         }
 
-        public bool Update(string id, OpportunityDetails opportunityDetailsIn)
+        public bool Update(string id, UserDetails userDetailsIn)
         {
-            var filter = Builders<Opportunity>.Filter.Eq(o => o.Id, id);
-            var update = Builders<Opportunity>.Update
-                .Set(opportunity => opportunity.Details, opportunityDetailsIn)
+            var filter = Builders<User>.Filter.Eq(o => o.Id, id);
+            var update = Builders<User>.Update
+                .Set(user => user.Details, userDetailsIn)
                 .CurrentDate(o => o.UpdatedAt);
             try
             {
                 _logger.LogInformation($"Trying to update opportunity {id}");
-                var opportunity = _opportunities.UpdateOne(filter, update);
-                var opportunityUpdatedId = opportunity.UpsertedId;
-                if (opportunity.ModifiedCount == 1)
+                var user = _users.UpdateOne(filter, update);
+                var userUpdatedId = user.UpsertedId;
+                if (user.ModifiedCount == 1)
                 {
                     _logger.LogInformation($"Updated successfully");
                     return true;
@@ -141,7 +140,7 @@ namespace TimeSharerApi.Services
                 _logger.LogError($"Error: {ex.Message}");
             }
             _logger.LogInformation($"Did not update record {id}");
-            throw new Exception("Error. Something went wrong and record was not updated.");
+            return false;
         }
     }
 }

@@ -42,7 +42,7 @@ namespace TimeSharerApi.Services
             return volunteer;
         }
 
-        public Volunteer Read(string id)
+        public Volunteer Get(string id)
         {
             if (ObjectId.TryParse(id, out _))
             {
