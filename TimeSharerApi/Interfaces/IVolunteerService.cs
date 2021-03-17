@@ -10,5 +10,6 @@ namespace TimeSharerApi.Interfaces
         public Volunteer Get(string id);
         public bool Update(string id, VolunteerDetails volunteerIn);
         public bool Delete(string id);
+        public bool AddUserIdToVolunteerRecord(string volunterId, string userId);
     }
 }

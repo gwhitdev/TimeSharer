@@ -17,12 +17,14 @@ namespace TimeSharerApi.Controllers
     {
         private readonly ILogger _logger;
         private readonly IVolunteerService _volunteersService;
+        private readonly IUsersService _usersService;
         public Response<List<Volunteer>> VolunteersResponse { get; set; }
 
-        public VolunteersController(ILoggerFactory loggerFactory, IVolunteerService volunteersService)
+        public VolunteersController(ILoggerFactory loggerFactory, IVolunteerService volunteersService, IUsersService usersService)
         {
             _logger = loggerFactory.CreateLogger<VolunteersController>();
             _volunteersService = volunteersService;
+            _usersService = usersService;
             VolunteersResponse = new();
         }
 
@@ -84,12 +86,35 @@ namespace TimeSharerApi.Controllers
             return BadRequest();
         }
 
-        [HttpPost]
+        [HttpPost("{userId}")]
         [ProducesResponseType(201, Type = typeof(Volunteer))]
         [ProducesResponseType(401)]
-        public IActionResult Create([FromBody] Volunteer volunteerIn)
+        public IActionResult Create([FromBody] Volunteer volunteerIn, string userId)
         {
             Volunteer volunteerToCreate = _volunteersService.Create(volunteerIn);
+
+            _logger.LogInformation($"Trying to add volunteer {volunteerToCreate.Id} to user {userId}");
+            var addVolunteerIdToUser = _usersService.AddVolunteerIdToUser(volunteerToCreate.Id, userId);
+            if (addVolunteerIdToUser)
+            {
+                _logger.LogInformation("Volunteer ID added to user successfully.");
+            }
+            else
+            {
+                _logger.LogError("Volunteer ID not added to user");
+            }
+
+            _logger.LogInformation($"Trying to add userId {userId} to volunteer {volunteerToCreate.Id}");
+            var addUserIdToVolunteer = _volunteersService.AddUserIdToVolunteerRecord(volunteerToCreate.Id, userId);
+            if(addUserIdToVolunteer)
+            {
+                _logger.LogInformation("User ID added to volunteer successfully.");
+            }
+            else
+            {
+                _logger.LogError("User ID not added to volunteer");
+            }
+
             return CreatedAtRoute(
                 routeName: "GetvolunteerById",
                 routeValues: new { id = volunteerToCreate.Id.ToString() },

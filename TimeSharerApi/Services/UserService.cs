@@ -118,12 +118,12 @@ namespace TimeSharerApi.Services
             var filter = Builders<User>.Filter.Eq(o => o.Id, id);
             var update = Builders<User>.Update
                 .Set(user => user.Details, userDetailsIn)
-                .CurrentDate(o => o.UpdatedAt);
+                .CurrentDate(u => u.UpdatedAt);
             try
             {
                 _logger.LogInformation($"Trying to update opportunity {id}");
                 var user = _users.UpdateOne(filter, update);
-                var userUpdatedId = user.UpsertedId;
+                
                 if (user.ModifiedCount == 1)
                 {
                     _logger.LogInformation($"Updated successfully");
@@ -141,6 +141,37 @@ namespace TimeSharerApi.Services
             }
             _logger.LogInformation($"Did not update record {id}");
             return false;
+        }
+
+        public bool AddVolunteerIdToUser(string volunteerId, string userId)
+        {
+            User existingUser = Get(userId);
+            if (existingUser == null) throw new Exception("Error. User does not exist.");
+
+            var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            var update = Builders<User>.Update
+                .Set(user => user.Details.AssociatedVolunteerId, volunteerId)
+                .CurrentDate(u => u.UpdatedAt);
+            try
+            {
+                var addIdToUser = _users.UpdateOne(filter, update);
+                var addedId = addIdToUser.UpsertedId;
+                if(addIdToUser.ModifiedCount == 1)
+                {
+                    _logger.LogInformation($"Record {userId} updated with volunteer id {addedId}");
+                    return true;
+                }
+                return false;
+            }
+            catch(MongoException ex)
+            {
+                _logger.LogError($"Error trying to update {userId}. {ex.Message}");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error trying to update {userId}: {ex.Message}");
+            }
+            throw new Exception("Could not update DB");
         }
     }
 }

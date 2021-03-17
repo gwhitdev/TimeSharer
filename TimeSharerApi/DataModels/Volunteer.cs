@@ -15,17 +15,18 @@ namespace TimeSharerApi.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string AssociatedUserId { get; set; }
         public string Name { get; set; }
+        /*
         public string DateOfBirth { get; set; }
         public string Town { get; set; }
-        public List<string> ListOfSkills { get; set; } = new();
+        public List<string> ListOfSkills { get; set; }
         [BsonElement("AssignedOpportunities")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public List<string> AssignedOpportunities { get; set; } = new();
-        public List<string> OrgsSharingDataWith { get; set; } = new();
+        public List<string> AssignedOpportunities { get; set; }
+        public List<string> OrgsSharingDataWith { get; set; }
         public bool AskedToDelete { get; set; } = false;
-        public bool OptedInAllProcessing { get; set; } = false;
-        public bool OptedInAllMarketing { get; set; } = false;
-        public bool TakingABreak { get; set; } = false;
+        public bool OptedInAllProcessing { get; set; }
+        public bool OptedInAllMarketing { get; set; }
+        public bool TakingABreak { get; set; }*/
     }
 
     

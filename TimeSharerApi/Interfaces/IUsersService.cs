@@ -9,5 +9,6 @@ namespace TimeSharerApi.Interfaces
         public User Get(string id);
         public bool Update(string id, UserDetails userDetailsIn);
         public bool Delete(string id);
+        public bool AddVolunteerIdToUser(string volunteerId, string userId);
     }
 }

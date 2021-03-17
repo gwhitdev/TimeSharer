@@ -5,6 +5,7 @@ using TimeSharerApi.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using MongoDB.Bson;
+using System.Threading.Tasks;
 
 namespace TimeSharerApi.Services
 {
@@ -13,8 +14,9 @@ namespace TimeSharerApi.Services
         private readonly ILogger _logger;
         private readonly IMongoCollection<Volunteer> _volunteers;
         //private readonly IMongoCollection<Organisation> _organisations;
+        private readonly IUsersService _usersService;
 
-        public VolunteerService(IDatabaseSettings settings, ILoggerFactory loggerFactory)
+        public VolunteerService(IDatabaseSettings settings, ILoggerFactory loggerFactory, IUsersService usersService)
         {
             _logger = loggerFactory.CreateLogger<VolunteerService>();
 
@@ -22,6 +24,7 @@ namespace TimeSharerApi.Services
             var database = client.GetDatabase(settings.DatabaseName);
 
             _volunteers = database.GetCollection<Volunteer>(settings.VolunteersCollectionName);
+            _usersService = usersService;
         }
 
         public List<Volunteer> Get()
@@ -37,7 +40,19 @@ namespace TimeSharerApi.Services
 
         public Volunteer Create(Volunteer volunteer)
         {
-            _volunteers.InsertOne(volunteer);
+            try
+            {
+                _logger.LogInformation($"Trying to creaete volunteer record for {volunteer.Details.Name}");
+                _volunteers.InsertOne(volunteer);
+            }
+            catch(MongoException ex)
+            {
+                _logger.LogError($"Could not create volunteer {ex.Message}");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+            }
             
             return volunteer;
         }
@@ -100,6 +115,38 @@ namespace TimeSharerApi.Services
         {
             DeleteResult removed = _volunteers.DeleteOne(volunteer => volunteer.Id == id);
             return removed.DeletedCount == 1;
+        }
+
+        public bool AddUserIdToVolunteerRecord(string volunteerId, string userId)
+        {
+            _logger.LogInformation($"Trying to find volunteer {volunteerId}");
+            Volunteer existingVolunteer = Get(volunteerId);
+            if (existingVolunteer == null) throw new Exception("Error. Volunteer does not exist.");
+
+            var filter = Builders<Volunteer>.Filter.Eq(v => v.Id, volunteerId);
+            var update = Builders<Volunteer>.Update
+                .Set(volunteer => volunteer.Details.AssociatedUserId, userId)
+                .CurrentDate(u => u.UpdatedAt);
+            try
+            {
+                var addIdToVolunteer = _volunteers.UpdateOne(filter, update);
+                var addedId = addIdToVolunteer.UpsertedId;
+                if (addIdToVolunteer.ModifiedCount == 1)
+                {
+                    _logger.LogInformation($"Record {volunteerId} updated with user id {addedId}");
+                    return true;
+                }
+                return false;
+            }
+            catch (MongoException ex)
+            {
+                _logger.LogError($"Error trying to update {userId}. {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error trying to update {userId}: {ex.Message}");
+            }
+            throw new Exception("Could not update DB");
         }
     }
 }
