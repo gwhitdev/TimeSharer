@@ -23,7 +23,7 @@ namespace TimeSharerApi.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public List<string> AssignedOpportunities { get; set; }
         public List<string> OrgsSharingDataWith { get; set; }
-        public bool AskedToDelete { get; set; } = false;
+        public bool AskedToDelete { get; set; }
         public bool OptedInAllProcessing { get; set; }
         public bool OptedInAllMarketing { get; set; }
         public bool TakingABreak { get; set; }*/
